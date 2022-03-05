@@ -6,26 +6,29 @@ using UnityEngine.Tilemaps;
 public class DungeonGeneration : MonoBehaviour {
 
 	[SerializeField]
-	private int numberOfRooms;
+	private int numberOfRooms;  //number of rooms in the map
 
 	[SerializeField]
-	private int numberOfObstacles;
+	private int numberOfObstacles;  //number of obstacles in each room
 	[SerializeField]
-	private Vector2Int[] possibleObstacleSizes;
-
-	[SerializeField]
-	private GameObject goalPrefab;
+	private Vector2Int[] possibleObstacleSizes;  //possible x and y sizes for the obstacles
 
 	[SerializeField]
-	private TileBase obstacleTile;
+	private GameObject goalPrefab;  // pre-fabricated object for the exit to the level
 
-	private Room[,] rooms;
+	[SerializeField]
+	private TileBase obstacleTile;  // pre-fabricated sprite for the visual of the obstacles
 
-	private Room currentRoom;
+	private Room[,] rooms;  //list of rooms
 
-	private static DungeonGeneration instance = null;
+	private Room currentRoom;  //room the player is currently in
+
+	private static DungeonGeneration instance = null;  // reference back to the class for instanciation
 
 	void Awake () {
+
+		//checks if the code is running for the first time and initializes the instance if it is, if not, restarts the dungeon
+
 		if (instance == null) {
 			DontDestroyOnLoad (this.gameObject);
 			instance = this;
@@ -40,6 +43,9 @@ public class DungeonGeneration : MonoBehaviour {
 	}
 
 	void Start () {
+
+		//creates a new level
+
 		string roomPrefabName = this.currentRoom.PrefabName ();
 		GameObject roomObject = (GameObject) Instantiate (Resources.Load (roomPrefabName));
 		Tilemap tilemap = roomObject.GetComponentInChildren<Tilemap> ();
@@ -47,15 +53,21 @@ public class DungeonGeneration : MonoBehaviour {
 	}
 
 	private Room GenerateDungeon() {
+
+		//main function that generates the level object
+
 		int gridSize = 3 * numberOfRooms;
 
 		rooms = new Room[gridSize, gridSize];
 
 		Vector2Int initialRoomCoordinate = new Vector2Int ((gridSize / 2) - 1, (gridSize / 2) - 1);
 
+		//queue the rooms to be creates
 		Queue<Room> roomsToCreate = new Queue<Room> ();
 		roomsToCreate.Enqueue (new Room(initialRoomCoordinate.x, initialRoomCoordinate.y));
 		List<Room> createdRooms = new List<Room> ();
+
+		//creates the rooms from the queue and add them as neighboors
 		while (roomsToCreate.Count > 0 && createdRooms.Count < numberOfRooms) {
 			Room currentRoom = roomsToCreate.Dequeue ();
 			this.rooms [currentRoom.roomCoordinate.x, currentRoom.roomCoordinate.y] = currentRoom;
@@ -63,9 +75,11 @@ public class DungeonGeneration : MonoBehaviour {
 			AddNeighbors (currentRoom, roomsToCreate);
 		}
 
+
 		int maximumDistanceToInitialRoom = 0;
 		Room finalRoom = null;
 		foreach (Room room in createdRooms) {
+			//makes sure the rooms are connected
 			List<Vector2Int> neighborCoordinates = room.NeighborCoordinates ();
 			foreach (Vector2Int coordinate in neighborCoordinates) {
 				Room neighbor = this.rooms [coordinate.x, coordinate.y];
@@ -73,8 +87,10 @@ public class DungeonGeneration : MonoBehaviour {
 					room.Connect (neighbor);
 				}
 			}
+			//populates them with obstacles 
 			room.PopulateObstacles (this.numberOfObstacles, this.possibleObstacleSizes);
 
+			//sets up the final room based on the distance to the initial room
 			int distanceToInitialRoom = Mathf.Abs (room.roomCoordinate.x - initialRoomCoordinate.x) + Mathf.Abs(room.roomCoordinate.y - initialRoomCoordinate.y);
 			if (distanceToInitialRoom > maximumDistanceToInitialRoom) {
 				maximumDistanceToInitialRoom = distanceToInitialRoom;
@@ -82,13 +98,20 @@ public class DungeonGeneration : MonoBehaviour {
 			}
 		}
 
+		//puts the exit in the final room
 		GameObject[] goalPrefabs = { this.goalPrefab };
 		finalRoom.PopulatePrefabs(1, goalPrefabs);
 
 		return this.rooms [initialRoomCoordinate.x, initialRoomCoordinate.y];
 	}
 
+
+
 	private void AddNeighbors(Room currentRoom, Queue<Room> roomsToCreate) {
+
+		//adds the neighboors to the a room
+
+		//checks how many neighboor can this room have
 		List<Vector2Int> neighborCoordinates = currentRoom.NeighborCoordinates ();
 		List<Vector2Int> availableNeighbors = new List<Vector2Int> ();
 		foreach (Vector2Int coordinate in neighborCoordinates) {
@@ -96,9 +119,9 @@ public class DungeonGeneration : MonoBehaviour {
 				availableNeighbors.Add (coordinate);
 			}
 		}
-			
+		
+		//gives the room a random number of neighboors
 		int numberOfNeighbors = (int)Random.Range (1, availableNeighbors.Count);
-
 		for (int neighborIndex = 0; neighborIndex < numberOfNeighbors; neighborIndex++) {
 			float randomNumber = Random.value;
 			float roomFrac = 1f / (float)availableNeighbors.Count;
@@ -116,29 +139,15 @@ public class DungeonGeneration : MonoBehaviour {
 		}
 	}
 
-	private void PrintGrid() {
-		for (int rowIndex = 0; rowIndex < this.rooms.GetLength (1); rowIndex++) {
-			string row = "";
-			for (int columnIndex = 0; columnIndex < this.rooms.GetLength (0); columnIndex++) {
-				if (this.rooms [columnIndex, rowIndex] == null) {
-					row += "X";
-				} else {
-					row += "R";
-				}
-			}
-			Debug.Log (row);
-		}
-	}
-
-	public void MoveToRoom(Room room) {
+	public void MoveToRoom(Room room) {  //updates the current room
 		this.currentRoom = room;
 	}
 
-	public Room CurrentRoom() {
+	public Room CurrentRoom() {  //gets the current room
 		return this.currentRoom;
 	}
 
-	public void ResetDungeon() {
+	public void ResetDungeon() {  //restart the level
 		this.currentRoom = GenerateDungeon ();
 	}
 		

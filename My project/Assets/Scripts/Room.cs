@@ -4,14 +4,15 @@ using UnityEngine.Tilemaps;
 
 public class Room
 {
-	public Vector2Int roomCoordinate;
-	public Dictionary<string, Room> neighbors;
+	public Vector2Int roomCoordinate;   //coordinates of the room
 
-	private string[,] population;
+	public Dictionary<string, Room> neighbors;  //neighboors of the room, ordered by direction
 
-	private Dictionary<string, GameObject> name2Prefab;
+	private string[,] population;  //what is in the room
 
-	public Room (int xCoordinate, int yCoordinate)
+	private Dictionary<string, GameObject> name2Prefab;  //pre-fabricated layout of the room
+
+	public Room (int xCoordinate, int yCoordinate)   //defines the room (like a __init__)
 	{
 		this.roomCoordinate = new Vector2Int (xCoordinate, yCoordinate);
 		this.neighbors = new Dictionary<string, Room> ();
@@ -25,7 +26,7 @@ public class Room
 		this.name2Prefab = new Dictionary<string, GameObject> ();
 	}
 
-	public Room (Vector2Int roomCoordinate)
+	public Room (Vector2Int roomCoordinate)  //same thing but redefined to be able to pass a vector2 instead of 2 coordinates (C# is weird)
 	{
 		this.roomCoordinate = roomCoordinate;
 		this.neighbors = new Dictionary<string, Room> ();
@@ -39,7 +40,7 @@ public class Room
 		this.name2Prefab = new Dictionary<string, GameObject> ();
 	}
 
-	public List<Vector2Int> NeighborCoordinates () {
+	public List<Vector2Int> NeighborCoordinates () {  //add the coordinates of the neighboors of the room (Up, Right, Down, Left)
 		List<Vector2Int> neighborCoordinates = new List<Vector2Int> ();
 		neighborCoordinates.Add (new Vector2Int(this.roomCoordinate.x, this.roomCoordinate.y - 1));
 		neighborCoordinates.Add (new Vector2Int(this.roomCoordinate.x + 1, this.roomCoordinate.y));
@@ -49,7 +50,7 @@ public class Room
 		return neighborCoordinates;
 	}
 
-	public void Connect (Room neighbor) {
+	public void Connect (Room neighbor) {  //adds a neighboor if there is a connection on that direction
 		string direction = "";
 		if (neighbor.roomCoordinate.y < this.roomCoordinate.y) {
 			direction = "N";
@@ -66,7 +67,7 @@ public class Room
 		this.neighbors.Add (direction, neighbor);
 	}
 
-	public string PrefabName () {
+	public string PrefabName () {  //gets the name of the pre-fabricated layout of the room (standalized to Room_<Connections direction>)
 		string name = "Room_";
 		foreach (KeyValuePair<string, Room> neighborPair in neighbors) {
 			name += neighborPair.Key;
@@ -74,11 +75,13 @@ public class Room
 		return name;
 	}
 
-	public Room Neighbor (string direction) {
+	public Room Neighbor (string direction) {  //returns the neighboor given the direction
 		return this.neighbors [direction];
 	}
 
 	public void PopulateObstacles (int numberOfObstacles, Vector2Int[] possibleSizes) {
+
+		//places a certain number of obstacles in the room in random positions by checking the positions that are free
 		for (int obstacleIndex = 0; obstacleIndex < numberOfObstacles; obstacleIndex += 1) {
 			int sizeIndex = Random.Range (0, possibleSizes.Length);
 			Vector2Int regionSize = possibleSizes [sizeIndex];
@@ -90,6 +93,8 @@ public class Room
 	}
 
 	public void PopulatePrefabs (int numberOfPrefabs, GameObject[] possiblePrefabs) {
+
+		//places the gameobjects based on the pre-fabricated layout of the room
 		for (int prefabIndex = 0; prefabIndex < numberOfPrefabs; prefabIndex += 1) {
 			int choiceIndex = Random.Range (0, possiblePrefabs.Length);
 			GameObject prefab = possiblePrefabs [choiceIndex];
@@ -101,6 +106,9 @@ public class Room
 	}
 
 	private List<Vector2Int> FindFreeRegion (Vector2Int sizeInTiles) {
+
+		//finds a random free region in the room 
+
 		List<Vector2Int> region = new List<Vector2Int>();
 		do {
 			region.Clear();
@@ -121,6 +129,9 @@ public class Room
 	}
 
 	private bool IsFree (List<Vector2Int> region) {
+
+		// checks if there is anything populating a region of the room
+
 		foreach (Vector2Int tile in region) {
 			if (this.population [tile.x, tile.y] != "") {
 				return false;
@@ -130,6 +141,9 @@ public class Room
 	}
 
 	public void AddPopulationToTilemap (Tilemap tilemap, TileBase obstacleTile) {
+
+		//fills the room with tiles (floors and wall) based on the pre-fabricated layout of the room
+
 		for (int xIndex = 0; xIndex < 18; xIndex += 1) {
 			for (int yIndex = 0; yIndex < 10; yIndex += 1) {
 				if (this.population [xIndex, yIndex] == "Obstacle") {

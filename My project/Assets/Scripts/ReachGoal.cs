@@ -5,15 +5,15 @@ using UnityEngine.SceneManagement;
 
 public class ReachGoal : MonoBehaviour {
 
-	void OnTriggerEnter2D(Collider2D col) {
-		if (col.gameObject.tag == "Player") {
-			GameObject[] enemies = GameObject.FindGameObjectsWithTag ("Enemy");
-			if (enemies.Length == 0) {
-				GameObject dungeon = GameObject.FindGameObjectWithTag ("Dungeon");
-				DungeonGeneration dungeonGeneration = dungeon.GetComponent<DungeonGeneration> ();
-				dungeonGeneration.ResetDungeon ();
-				SceneManager.LoadScene ("Demo");
-			}
+	void OnTriggerEnter2D(Collider2D col) {   //check for colision with the object
+
+		if (col.gameObject.tag == "Player") {  // if colided with the player
+
+			GameObject dungeon = GameObject.FindGameObjectWithTag ("Dungeon");  //finds the Dungeon object
+			DungeonGeneration dungeonGeneration = dungeon.GetComponent<DungeonGeneration> ();   //gets the object
+			dungeonGeneration.ResetDungeon ();  //resets the dungeon
+			SceneManager.LoadScene ("Demo");  //loads the scene
+		
 		}
 	}
 }

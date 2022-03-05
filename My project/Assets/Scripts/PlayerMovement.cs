@@ -41,21 +41,21 @@ public class PlayerMovement : MonoBehaviour
         Vector2 targetPos = Vector2.zero;
         if (FacingDir == Facing.UP)
         {
-            targetPos.y = 1;
+            targetPos.y = 1; //set the direction of the target position up
         }
         else if (FacingDir == Facing.LEFT)
         {
-            targetPos.x = -1;
+            targetPos.x = -1; //set the direction of the target position left
         }
         else if (FacingDir == Facing.DOWN)
         {
-            targetPos.y = -1;
+            targetPos.y = -1; //set the direction of the target position down
         }
         else if (FacingDir == Facing.RIGHT)
         {
-            targetPos.x = 1;
+            targetPos.x = 1; //set the direction of the target position right
         }
-        transform.Translate(targetPos * dashRange);
+        transform.Translate(targetPos * dashRange); //teleport the player dashRange units in the target direction
     }
 
     //Gets the input from the keyboard
